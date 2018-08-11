@@ -1,6 +1,7 @@
  var express = require('express');
  var path = require('path');
  var serveStatic = require('serve-static');
+ var facebook = require('facebook-login-vuejs')
 
  app = express();
  app.use(serveStatic(__dirname + "/dist"));

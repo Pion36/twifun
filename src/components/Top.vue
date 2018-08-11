@@ -30,6 +30,7 @@
             <p>目標額</p>
             <input v-model="target" placeholder="目標額を記入"  type="number" number> Ether
             <a class="button is-info is-outlined" v-on:click="MakeModal = true">作成</a>
+            <a class="button is-info is-outlined" v-on:click="twitterapi()">Twitter</a>
           </div>
         </div>
         <div class="column is-7">
@@ -74,19 +75,19 @@
                     <p>{{ AllBoxlist[index].purpose }}</p>
                     <p>目標額:{{ AllBoxlist[index].target }} Ether</p>
                     <p>達成率:{{ AllBoxlist[index].amount / AllBoxlist[index].target * 100}}%</p>
-                    <a class="button is-info is-outlined" v-on:click="DetailBoxModal = true, showname = AllBoxlist[index].name, showindex = AllBoxlist[index].id, showtarget = AllBoxlist[index].target, showamount = AllBoxlist[index].amount, showlimit = AllBoxlist[index].limittime">詳細</a>
+                    <a class="button is-info is-outlined" v-on:click="DetailBoxModal = true, showname = AllBoxlist[index].name, showindex = AllBoxlist[index].id, showtarget = AllBoxlist[index].target, showamount = AllBoxlist[index].amount, showlimit = AllBoxlist[index].limittime, tanin = true">詳細</a>
                   </div>
                   <div v-if="AllBoxlist[index+1]" class="column is-4 is-desktop box" style="margin:0 0px 12px 0px;">
                     <p>{{ AllBoxlist[index+1].purpose }}</p>
                     <p>目標額:{{ AllBoxlist[index+1].target }} Ether</p>
                     <p>達成率:{{ AllBoxlist[index+1].amount / AllBoxlist[index+1].target * 100}}%</p>
-                    <a class="button is-info is-outlined" v-on:click="DetailBoxModal = true, showname = AllBoxlist[index+1].name, showindex = AllBoxlist[index+1].id, showtarget = AllBoxlist[index+1].target, showamount = AllBoxlist[index+1].amount, showlimit = AllBoxlist[index+1].limittime">詳細</a>
+                    <a class="button is-info is-outlined" v-on:click="DetailBoxModal = true, showname = AllBoxlist[index+1].name, showindex = AllBoxlist[index+1].id, showtarget = AllBoxlist[index+1].target, showamount = AllBoxlist[index+1].amount, showlimit = AllBoxlist[index+1].limittime, tanin = true">詳細</a>
                   </div>
                   <div v-if="AllBoxlist[index+2]" class="column is-4 is-desktop box" style="margin:0 0px 12px 0px;">
                     <p>{{ AllBoxlist[index+2].purpose }}</p>
                     <p>目標額:{{ AllBoxlist[index+2].target }} Ether</p>
                     <p>達成率:{{ AllBoxlist[index+2].amount / AllBoxlist[index+2].target * 100}}%</p>
-                    <a class="button is-info is-outlined" v-on:click="DetailBoxModal = true, showname = AllBoxlist[index+2].name, showindex = AllBoxlist[index+2].id, showtarget = AllBoxlist[index+2].target, showamount = AllBoxlist[index+2].amount, showlimit = AllBoxlist[index+2].limittime">詳細</a>
+                    <a class="button is-info is-outlined" v-on:click="DetailBoxModal = true, showname = AllBoxlist[index+2].name, showindex = AllBoxlist[index+2].id, showtarget = AllBoxlist[index+2].target, showamount = AllBoxlist[index+2].amount, showlimit = AllBoxlist[index+2].limittime, tanin = true">詳細</a>
                   </div>
                 </div>
               </div>
@@ -111,10 +112,10 @@
              <p v-if="unixcurrent() > showlimit * 1000" style="color:red;">期限を超えてしまいました</p>
            </section>
            <footer class="modal-card-foot">
-             <a class="button is-info is-outlined" v-if="(unixcurrent() <= showlimit * 1000) && (showamount / showtarget * 100 < 100)" v-on:click="DepositModal = true, exertid = showindex,exertname = showname">貯金</a>
-             <a class="button is-info is-outlined" v-if="showamount / showtarget * 100 >= 100 && WithdrawActive" v-on:click="WithdrawModal = true, exertid = showindex,exertname = showname">割る</a>
-             <a class="button is-info is-outlined" v-if="showamount / showtarget * 100 < 100 && WithdrawActive" v-on:click="PenaltyWithdrawModal = true, exertid = showindex,exertname = showname">割る</a>
-             <button class="button" type="button" @click="DetailBoxModal = false">閉じる</button>
+             <a class="button is-info is-outlined" v-if="(unixcurrent() <= showlimit * 1000) && (showamount / showtarget * 100 < 100), tanin == true" v-on:click="DepositModal = true, exertid = showindex,exertname = showname">貯金</a>
+             <a class="button is-info is-outlined" v-if="showamount / showtarget * 100 >= 100 && WithdrawActive && tanin == false" v-on:click="WithdrawModal = true, exertid = showindex,exertname = showname">引き出す</a>
+             <a class="button is-info is-outlined" v-if="showamount / showtarget * 100 < 100 && WithdrawActive && tanin == false" v-on:click="PenaltyWithdrawModal = true, exertid = showindex,exertname = showname">引き出す</a>
+             <button class="button" type="button" @click="DetailBoxModal = false, tanin = false">閉じる</button>
            </footer>
        </div>
     </b-modal>
@@ -168,6 +169,8 @@
 </template>
 
 <script>
+import Twitter from 'node-twitter-api'
+
 export default {
   name: 'Top',
   data () {
@@ -190,7 +193,8 @@ export default {
       WithdrawModal: false,
       exertid: null,
       exertname: null,
-      twitterID: 5555555
+      twitterID: 5555555,
+      tanin: false
     }
   },
   computed: {
@@ -208,6 +212,24 @@ export default {
     })
   },
   methods: {
+    twitterapi: function () {
+      var twitter = new Twitter({
+        consumerKey: 'cB12zexX5r9ThpBEchOgi8GZC',
+        consumerSecret: 'hyhHfRATViWdBLWCn0vNYj7HsAZGnsjE2usihYijfRnue5ICZo',
+        callback: 'http://localhost:8080'
+      })
+
+      twitter.getRequestToken(function (error, requestToken, requestTokenSecret, results) {
+        if (error) {
+          console.log('Error getting OAuth request token : ' + error)
+        } else {
+          this.$session.start()
+          this.$session.set('token', requestToken)
+          this.$session.set('secret', requestTokenSecret)
+          console.log('requestToken: ' + requestToken)
+        }
+      })
+    },
     unixcurrent: function () {
       var current = Date.now()
       return current
@@ -234,11 +256,9 @@ export default {
       })
     },
     BoxToOwner: function (id) {
-      var self = this
       this.$store.state.contractInstance().BoxToOwner.call(id, function (err, result) {
         if (!err) {
           console.log(result)
-          console.log(self.web3.coinbase)
           return result
         }
       })
